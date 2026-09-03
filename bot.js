@@ -196,6 +196,17 @@ const FEEDBACK_MARKDOWN = [
   "💡 *在QQ中搜索群号即可加入*",
 ].join("\n");
 
+// ===== 匹配辅助：兼容指令面板发来的 "/关键词" / "关键词" / 带空格等 =====
+function matches(text, keywords) {
+  const t = (text || "").trim().toLowerCase();
+  // 去掉可能的斜杠前缀和空白
+  const clean = t.replace(/^\/+/, "").trim();
+  return keywords.some((k) => {
+    const key = String(k).toLowerCase();
+    return clean === key || clean.startsWith(key) || t === key || text.includes(key);
+  });
+}
+
 // ===== 可扩展：你的机器人回复逻辑 =====
 // 返回 { text, markdown, keyboard } 三种之一；按开关决定实际发送哪种
 function buildReply(content) {
@@ -203,23 +214,20 @@ function buildReply(content) {
   const low = text.toLowerCase();
 
   // 菜单/帮助
-  if (["菜单", "帮助", "help", "功能", "功能菜单"].includes(low)) {
+  if (matches(text, ["菜单", "帮助", "help", "功能", "功能菜单", "menu"])) {
     if (ENABLE_BUTTON) return buildButtonMenu();
     if (ENABLE_MARKDOWN) return { markdown: MENU_MARKDOWN };
     return MENU_TEXT;
   }
 
   // 【功能1】访问社群站 —— 返回功能结果（社群站链接），不再返回菜单
-  if (
-    ["1", "社群站", "社群官网", "访问社群站", "官网", "网站"].includes(low) ||
-    text.includes("社群站")
-  ) {
+  if (matches(text, ["1", "社群站", "社群官网", "访问社群站", "官网", "网站", "site"])) {
     if (ENABLE_MARKDOWN) return { markdown: SITE_MARKDOWN };
     return SITE_TEXT;
   }
 
   // 【功能2】查询EC社群 —— 占位（下午接入 Turso 后完善）
-  if (["2", "查EC社群", "查询EC社群", "EC社群", "社群数据"].includes(low) || text.includes("EC社群")) {
+  if (matches(text, ["2", "查EC社群", "查询EC社群", "EC社群", "社群数据", "ec"])) {
     if (ENABLE_MARKDOWN) {
       return {
         markdown: [
@@ -245,7 +253,7 @@ function buildReply(content) {
   }
 
   // 【功能3】反馈建议 —— 展示反馈群信息
-  if (["3", "反馈", "反馈群", "建议", "反馈建议", "意见"].includes(low) || text.includes("反馈")) {
+  if (matches(text, ["3", "反馈", "反馈群", "建议", "反馈建议", "意见", "feedback"])) {
     if (ENABLE_MARKDOWN) return { markdown: FEEDBACK_MARKDOWN };
     return [
       "💬 欢迎加入机器人反馈群！",
