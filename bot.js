@@ -433,6 +433,23 @@ const gateway = new QQBotGateway({
         const reply = buildReply(content);
         await sendGroupMessage(groupOpenid, toSendParams(reply, msgId));
         console.log(`[群聊@] ✅ 已回复`);
+      } else if (eventName === "GROUP_MESSAGE_CREATE") {
+        // 群聊全量消息模式：群里所有消息都会触发，需判断是否@了本机器人
+        const groupOpenid = d.group_openid;
+        const content = d.content || "";
+        const msgId = d.id;
+        if (!groupOpenid) return;
+        // 只处理包含 @机器人 引用的消息（全量模式下艾特机器人也走这里）
+        const hasAt = /@[^ ]+/i.test(content) || /<@/.test(content);
+        if (!hasAt) {
+          console.log(`[群聊] ${groupOpenid}: ${content} (未@机器人，忽略)`);
+          return;
+        }
+        console.log(`[群聊] ${groupOpenid}: ${content}`);
+        // 去掉消息中的 @机器人 标记，再匹配
+        const reply = buildReply(content.replace(/<@[^>]+>/g, "").trim());
+        await sendGroupMessage(groupOpenid, toSendParams(reply, msgId));
+        console.log(`[群聊] ✅ 已回复（全量模式）`);
       }
     } catch (e) {
       console.error("处理事件失败:", e.message);
