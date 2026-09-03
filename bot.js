@@ -196,14 +196,16 @@ const FEEDBACK_MARKDOWN = [
   "💡 *在QQ中搜索群号即可加入*",
 ].join("\n");
 
-// ===== 匹配辅助：兼容指令面板发来的 "/关键词" / "关键词" / 带空格等 =====
+// ===== 匹配辅助：兼容指令面板发来的 "/关键词" / "关键词" =====
+// 注意：不用宽松的 includes 子串匹配，避免"社群"等词误命中多个功能
 function matches(text, keywords) {
   const t = (text || "").trim().toLowerCase();
   // 去掉可能的斜杠前缀和空白
   const clean = t.replace(/^\/+/, "").trim();
   return keywords.some((k) => {
     const key = String(k).toLowerCase();
-    return clean === key || clean.startsWith(key) || t === key || text.includes(key);
+    // 只做等值 或 前缀精确匹配（关键词作为开头），不做任意位置子串匹配
+    return clean === key || clean === "/" + key || clean.startsWith(key + " ") || t === key;
   });
 }
 
